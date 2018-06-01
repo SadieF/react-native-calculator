@@ -13,11 +13,22 @@ const inputButtons = [
 ];
 
 export default class ReactCalculator extends Component {
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            previousInputValue: 0,
+            inputValue: 0,
+            selectedSymbol: null
+        }
+    }
 
     render() {
         return (
             <View style={Style.rootContainer}>
-                <View style={Style.displayContainer}></View>
+                <View style={Style.displayContainer}>
+                    <Text style={Style.displayText}>{this.state.inputValue}</Text>
+                </View>
                 <View style={Style.inputContainer}>
                     {this._renderInputButtons()}
                 </View>
@@ -26,9 +37,51 @@ export default class ReactCalculator extends Component {
     }
 
     _onInputButtonPressed(input) {
-        alert(input)
+        switch (typeof input) {
+            case 'number':
+                return this._handleNumberInput(input)
+            case 'string':
+                return this._handleStringInput(input)
+        }
     }
-    
+
+    _handleNumberInput(num) {
+        let inputValue = (this.state.inputValue * 10) + num;
+
+        this.setState({
+            inputValue: inputValue
+        })
+    }
+
+    _handleStringInput(str) {
+        switch (str) {
+            case '/':
+            case '*':
+            case '+':
+            case '-':
+                this.setState({
+                    selectedSymbol: str,
+                    previousInputValue: this.state.inputValue,
+                    inputValue: 0
+                });
+                case '=':
+                let symbol = this.state.selectedSymbol,
+                    inputValue = this.state.inputValue,
+                    previousInputValue = this.state.previousInputValue;
+
+                if (!symbol) {
+                    return;
+                }
+
+                this.setState({
+                    previousInputValue: 0,
+                    inputValue: eval(previousInputValue + symbol + inputValue),
+                    selectedSymbol: null
+                });
+                break;
+        }
+    }
+
     _renderInputButtons() {
         let views = [];
 
@@ -42,6 +95,7 @@ export default class ReactCalculator extends Component {
                 inputRow.push(
                     <InputButton
                         value={input}
+                        highlight={this.state.selectedSymbol === input}
                         onPress={this._onInputButtonPressed.bind(this, input)}
                         key={r + "-" + i}/>
                 )
